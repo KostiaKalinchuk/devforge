@@ -31,8 +31,8 @@ router.post('/:id/start', (req, res) => {
 })
 
 // Accept task (awaiting_acceptance → done)
-router.post('/:id/accept', (req, res) => {
-  orchestrator.acceptTask(req.params.id)
+router.post('/:id/accept', async (req, res) => {
+  await orchestrator.acceptTask(req.params.id)
   res.json({ ok: true })
 })
 

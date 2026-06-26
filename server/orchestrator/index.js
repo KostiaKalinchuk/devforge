@@ -158,7 +158,13 @@ function answerPMQuestions(taskId, answers) {
   broadcast({ type: 'task_update', task: getTask(taskId) })
 }
 
-function acceptTask(taskId) {
+async function acceptTask(taskId) {
+  const task = getTask(taskId)
+  if (task && task.local_path && task.branch) {
+    await gitHelper.pushBranch(task.local_path, task.branch).catch(err => {
+      console.warn(`[git] push failed for task ${taskId}:`, err.message)
+    })
+  }
   db.prepare(`UPDATE tasks SET status = 'done', updated_at = unixepoch() WHERE id = ?`).run(taskId)
   broadcast({ type: 'task_update', task: getTask(taskId) })
 }
