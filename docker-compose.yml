@@ -1,0 +1,27 @@
+services:
+  devforge:
+    build: .
+    container_name: devforge
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    volumes:
+      # Persist DB and workspace
+      - ./devforge.db:/app/devforge.db
+      - ./workspace:/app/workspace
+      # Mount host Docker socket so devforge can spin up project containers
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount projects directory so devforge can copy project source
+      - /Users/kostiantynkalinchuk/localhost:/projects:ro
+    environment:
+      - PORT=4000
+      - WORKSPACE_DIR=/app/workspace
+      - PROJECTS_DIR=/projects
+      - CLAUDE_BIN=claude
+      - CLAUDE_FLAGS=--dangerously-skip-permissions
+      - DOCKER_PORT_RANGE_START=3100
+      - DOCKER_PORT_RANGE_END=3999
+      - CONTAINER_HEALTH_TIMEOUT=120
+    # claude CLI must be available — mount from host
+    # Run: docker compose run --rm devforge which claude  (to verify)
+    network_mode: host   # needed so devforge can reach spawned project containers on localhost

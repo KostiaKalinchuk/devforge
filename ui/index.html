@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevForge</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Top bar -->
+<div id="topbar">
+  <h1>🔨 Dev<span>Forge</span></h1>
+  <select id="project-select"></select>
+  <div id="ws-dot" title="WebSocket connection"></div>
+  <button id="btn-projects" onclick="toggleProjects()">⚙ Projects</button>
+  <button id="btn-new-task" onclick="openNewTask()">+ New Task</button>
+</div>
+
+<!-- Kanban board -->
+<div id="kanban"></div>
+
+<!-- ── Task detail modal ── -->
+<div class="modal-bg" id="task-modal" onclick="if(event.target===this)closeModal('task-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <span id="modal-status"></span>
+      <button class="modal-close" onclick="closeModal('task-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="tabs">
+        <button class="tab active" data-tab="logs"      onclick="switchTab('logs')">Logs</button>
+        <button class="tab"        data-tab="files"     onclick="switchTab('files')">Files</button>
+        <button class="tab"        data-tab="evidence"  onclick="switchTab('evidence')">QA Evidence</button>
+        <button class="tab"        data-tab="questions" onclick="switchTab('questions')">PM Q&amp;A</button>
+      </div>
+      <div class="tab-pane active" id="pane-logs">
+        <div id="modal-logs"></div>
+      </div>
+      <div class="tab-pane" id="pane-files">
+        <div id="modal-files"></div>
+      </div>
+      <div class="tab-pane" id="pane-evidence">
+        <div id="modal-evidence"></div>
+      </div>
+      <div class="tab-pane" id="pane-questions">
+        <div id="modal-questions"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="btn-answer-pm"   class="btn-primary"   onclick="submitAnswers()"  style="display:none">Submit Answers</button>
+      <button id="btn-start-task"  class="btn-primary"   onclick="startTask()"      style="display:none">▶ Start Task</button>
+      <button id="btn-accept-task" class="btn-green"     onclick="acceptTask()"     style="display:none">✓ Accept &amp; Close</button>
+      <button class="btn-secondary" onclick="closeModal('task-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New task modal ── -->
+<div class="modal-bg" id="new-task-modal" onclick="if(event.target===this)closeModal('new-task-modal')">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <h2>New Task</h2>
+      <button class="modal-close" onclick="closeModal('new-task-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Project</label>
+        <select id="new-project-select"></select>
+        <input type="hidden" id="new-project-id">
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="new-task-title" placeholder="Short description of what to build…"
+               onkeydown="if(event.key==='Enter')createTask()">
+      </div>
+      <div class="form-group">
+        <label>Description <span style="color:var(--text2);font-weight:400">(optional — PM will ask clarifying questions)</span></label>
+        <textarea id="new-task-desc" placeholder="Any initial context, constraints, or examples…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="createTask()">Create Task</button>
+      <button class="btn-secondary" onclick="closeModal('new-task-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add project modal ── -->
+<div class="modal-bg" id="add-project-modal" onclick="if(event.target===this)closeModal('add-project-modal')">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <h2>Add Project</h2>
+      <button class="modal-close" onclick="closeModal('add-project-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Project Name</label>
+        <input type="text" id="proj-name" placeholder="e.g. pairfi">
+      </div>
+      <div class="form-group">
+        <label>Local Path</label>
+        <input type="text" id="proj-path" placeholder="/Users/you/localhost/my-project">
+      </div>
+      <div class="form-group">
+        <label>Internal Docker Port</label>
+        <input type="number" id="proj-port" value="80" placeholder="80">
+      </div>
+      <div class="form-group">
+        <label>Health Check Endpoint</label>
+        <input type="text" id="proj-health" value="/health" placeholder="/health">
+      </div>
+      <div class="form-group">
+        <label>Test Command</label>
+        <input type="text" id="proj-test" value="php artisan test" placeholder="php artisan test">
+      </div>
+      <div class="form-group">
+        <label>Description <span style="color:var(--text2);font-weight:400">(optional)</span></label>
+        <textarea id="proj-desc" placeholder="What this project does…" style="min-height:50px"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="saveProject()">Save Project</button>
+      <button class="btn-secondary" onclick="closeModal('add-project-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Projects side panel ── -->
+<div id="projects-panel">
+  <div class="panel-header">
+    <h2>⚙ Projects</h2>
+    <button class="modal-close" onclick="toggleProjects()">×</button>
+  </div>
+  <div class="panel-body" id="projects-body"></div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border)">
+    <button class="btn-primary" style="width:100%" onclick="openAddProject()">+ Add Project</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
