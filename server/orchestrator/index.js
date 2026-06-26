@@ -4,6 +4,7 @@ const sm           = require('./state-machine')
 const envManager   = require('../environment/manager')
 const { createAdapter } = require('../runner/adapters/claude-code')
 const { v4: uuid } = require('uuid')
+const gitHelper    = require('./git')
 
 const { exec } = require('child_process')
 
@@ -72,6 +73,12 @@ async function processTask(task) {
 
     db.prepare(`UPDATE tasks SET env_port = ?, env_container_prefix = ? WHERE id = ?`)
       .run(env.port, env.prefix, task.id)
+  }
+
+  // For Developer (first run): create feature branch from main
+  if (task.status === 'dev_active' && task.retry_count === 0) {
+    await gitHelper.checkoutBranchFromMain(task.local_path, task.branch)
+    log(task.id, 'orchestrator', 'started', `Checked out branch ${task.branch} from main`)
   }
 
   // Run agent via Claude Code CLI
