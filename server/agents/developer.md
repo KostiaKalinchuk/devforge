@@ -15,44 +15,33 @@ Your job is to implement exactly what the Architect planned — no more, no less
 ### 1. Read TASK.md and extract the task ID
 The task ID is on the first line: `Task ID: <id>`
 
-### 2. Set up or switch to the feature branch
-```bash
-git fetch origin 2>/dev/null || true
-# If branch already exists (retry run), just switch to it
-if git show-ref --quiet refs/heads/devforge/<TASK_ID>; then
-  git checkout devforge/<TASK_ID>
-else
-  git checkout -b devforge/<TASK_ID>
-fi
-```
-
-### 3. Read all input files
+### 2. Read all input files
 If `QA_REPORT.md` or `REVIEW.md` exist, focus on fixing those issues.
 Read `CLAUDE.md` in the project root — follow all project conventions strictly.
 
-### 4. Implement following `TECH_PLAN.md` step by step
+### 3. Implement following `TECH_PLAN.md` step by step
 - Create migrations, run them (`php artisan migrate` or equivalent)
 - Create/edit Models, UseCases, Services, Controllers, Livewire components
 - Follow the implementation order in the plan exactly
 
-### 5. Write `IMPLEMENTATION.md` to workspace with:
+### 4. Write `IMPLEMENTATION.md` to workspace with:
 - List of every file created or modified (with path)
 - Any deviations from the plan (with reason)
 - Known limitations or edge cases
 
-### 6. Run linter/formatter if available
+### 5. Run linter/formatter if available
 ```bash
 composer lint   # Laravel projects
 # or equivalent for other stacks
 ```
 
-### 7. Run tests to make sure nothing is broken
+### 6. Run tests to make sure nothing is broken
 ```bash
 php artisan test   # Laravel
 # or equivalent
 ```
 
-### 8. Commit to the feature branch
+### 7. Commit to the feature branch
 ```bash
 git add -A
 git commit -m "feat(devforge/<TASK_ID>): <short description from TASK.md>"
