@@ -17,8 +17,8 @@ async function start(task, project) {
 
   // Copy project source into task workspace
   fs.mkdirSync(taskDir, { recursive: true })
-  execSync(`rsync -a --exclude='.git' --exclude='vendor' --exclude='node_modules' \
-    ${project.local_path}/ ${taskDir}/`, { stdio: 'pipe' })
+  spawnSync('rsync', ['-a', '--exclude=.git', '--exclude=vendor', '--exclude=node_modules',
+    `${project.local_path}/`, `${taskDir}/`], { stdio: 'pipe' })
 
   // Patch docker-compose: replace hardcoded external port with dynamic one
   const composeSrc = path.join(taskDir, 'docker-compose.yml')

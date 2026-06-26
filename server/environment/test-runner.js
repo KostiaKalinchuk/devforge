@@ -1,4 +1,4 @@
-const { execSync } = require('child_process')
+const { execSync, spawnSync } = require('child_process')
 const fs   = require('fs')
 const path = require('path')
 
@@ -9,15 +9,15 @@ const path = require('path')
 function runProjectTests(taskDir, prefix, testCommand) {
   const cmd = testCommand || 'php artisan test'
   try {
-    // Find the app service name from compose
     const appService = detectAppService(taskDir)
-    const output = execSync(
-      `docker compose -p ${prefix} exec -T ${appService} ${cmd}`,
-      { cwd: taskDir, timeout: 5 * 60 * 1000 }
-    ).toString()
-    return { passed: true, output }
+    const result = spawnSync(
+      'docker', ['compose', '-p', prefix, 'exec', '-T', appService, 'sh', '-c', cmd],
+      { cwd: taskDir, timeout: 5 * 60 * 1000, encoding: 'utf8' }
+    )
+    if (result.status !== 0) throw new Error(result.stderr || result.stdout || 'test failed')
+    return { passed: true, output: result.stdout }
   } catch (e) {
-    return { passed: false, output: e.stdout?.toString() || e.message }
+    return { passed: false, output: e.message }
   }
 }
 

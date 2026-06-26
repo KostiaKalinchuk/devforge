@@ -19,7 +19,9 @@ function write(taskId, filename, content) {
 }
 
 function read(taskId, filename) {
-  const p = path.join(taskDir(taskId), filename)
+  const dir = taskDir(taskId)
+  const p = path.resolve(dir, path.basename(filename))
+  if (!p.startsWith(dir + path.sep)) return null
   return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null
 }
 

@@ -21,7 +21,8 @@ async function main() {
 
   app.use('/evidence', (req, res, next) => {
     const wsDir = path.resolve(process.env.WORKSPACE_DIR || './workspace')
-    const file  = path.join(wsDir, req.path)
+    const file  = path.resolve(wsDir, req.path.replace(/^\/+/, ''))
+    if (!file.startsWith(wsDir + path.sep)) return next()
     if (fs.existsSync(file) && fs.statSync(file).isFile()) return res.sendFile(file)
     next()
   })
