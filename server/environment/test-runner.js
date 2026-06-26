@@ -10,8 +10,9 @@ function runProjectTests(taskDir, prefix, testCommand) {
   const cmd = testCommand || 'php artisan test'
   try {
     const appService = detectAppService(taskDir)
+    const cmdArgv = cmd.trim().split(/\s+/)
     const result = spawnSync(
-      'docker', ['compose', '-p', prefix, 'exec', '-T', appService, 'sh', '-c', cmd],
+      'docker', ['compose', '-p', prefix, 'exec', '-T', appService, ...cmdArgv],
       { cwd: taskDir, timeout: 5 * 60 * 1000, encoding: 'utf8' }
     )
     if (result.status !== 0) throw new Error(result.stderr || result.stdout || 'test failed')
