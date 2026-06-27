@@ -6,6 +6,7 @@ const WORKSPACE_ROOT = path.resolve(process.env.WORKSPACE_DIR || './workspace')
 function taskDir(taskId)      { return path.join(WORKSPACE_ROOT, taskId) }
 function evidenceDir(taskId)  { return path.join(WORKSPACE_ROOT, taskId, 'qa-evidence') }
 function projectDir(taskId)   { return path.join(WORKSPACE_ROOT, taskId, 'project') }
+function worktreeDir(taskId) { return path.join(WORKSPACE_ROOT, taskId, 'worktree') }
 
 function init(taskId, taskTitle, taskDescription) {
   const dir = taskDir(taskId)
@@ -45,4 +46,4 @@ function listEvidenceFiles(taskId) {
   }))
 }
 
-module.exports = { taskDir, evidenceDir, projectDir, init, write, read, exists, listFiles, listEvidenceFiles }
+module.exports = { taskDir, evidenceDir, projectDir, worktreeDir, init, write, read, exists, listFiles, listEvidenceFiles }
