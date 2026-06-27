@@ -1,6 +1,31 @@
+# Dependencies
 node_modules/
+
+# Environment
 .env
+
+# Database
+devforge.db
+*.db-journal
+
+# Task workspaces (generated at runtime)
 workspace/*/
 !workspace/.gitkeep
-devforge.db
+
+# Logs
 *.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# SDD scratch files (review diffs, reports, progress ledger)
+.superpowers/
+
+# macOS
+.DS_Store
+
+# Docker
+*.env.local
