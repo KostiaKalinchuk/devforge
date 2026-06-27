@@ -10,6 +10,7 @@ const { exec } = require('child_process')
 const fs = require('fs')
 
 const WORKTREE_STATUSES = new Set(['dev_active', 'qa_active', 'tests_active', 'review_active'])
+const MAX_LOGS_PER_TASK = 200
 
 function macNotify(title, body) {
   // macOS system notification — works even when browser is closed
@@ -234,6 +235,14 @@ function failTask(taskId, message) {
 function log(taskId, agent, status, message) {
   db.prepare('INSERT INTO agent_logs (id, task_id, agent, status, message) VALUES (?, ?, ?, ?, ?)')
     .run(uuid(), taskId, agent, status, message || '')
+  // Keep only the most recent MAX_LOGS_PER_TASK entries per task
+  db.prepare(`
+    DELETE FROM agent_logs
+    WHERE task_id = ? AND id NOT IN (
+      SELECT id FROM agent_logs WHERE task_id = ?
+      ORDER BY created_at DESC LIMIT ?
+    )
+  `).run(taskId, taskId, MAX_LOGS_PER_TASK)
 }
 
 function getTask(taskId) {
