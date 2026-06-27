@@ -147,6 +147,8 @@ async function openTaskModal(taskId) {
   document.getElementById('btn-start-task').style.display    = task.status === 'inbox' ? '' : 'none'
   document.getElementById('btn-accept-task').style.display   = task.status === 'awaiting_acceptance' ? '' : 'none'
   document.getElementById('btn-answer-pm').style.display     = task.status === 'pm_questioning' ? '' : 'none'
+  document.getElementById('btn-cancel-task').style.display   = !['inbox','done','failed'].includes(task.status) ? '' : 'none'
+  document.getElementById('btn-retry-task').style.display    = task.status === 'failed' ? '' : 'none'
 
   switchTab('logs')
   loadModalLogs(taskId)
@@ -237,6 +239,18 @@ async function startTask() {
 async function acceptTask() {
   const id = document.getElementById('task-modal').dataset.taskId
   await api('POST', `/tasks/${id}/accept`)
+  closeModal('task-modal')
+}
+
+async function cancelTask() {
+  const id = document.getElementById('task-modal').dataset.taskId
+  await api('POST', `/tasks/${id}/cancel`)
+  closeModal('task-modal')
+}
+
+async function retryTask() {
+  const id = document.getElementById('task-modal').dataset.taskId
+  await api('POST', `/tasks/${id}/retry`)
   closeModal('task-modal')
 }
 

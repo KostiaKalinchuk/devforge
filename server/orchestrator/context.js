@@ -46,4 +46,11 @@ function listEvidenceFiles(taskId) {
   }))
 }
 
-module.exports = { taskDir, evidenceDir, projectDir, worktreeDir, init, write, read, exists, listFiles, listEvidenceFiles }
+function deleteWorkspace(taskId) {
+  const dir = taskDir(taskId)
+  if (fs.existsSync(dir)) {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+module.exports = { taskDir, evidenceDir, projectDir, worktreeDir, init, write, read, exists, listFiles, listEvidenceFiles, deleteWorkspace }

@@ -182,6 +182,20 @@ async function acceptTask(taskId) {
     })
   }
   db.prepare(`UPDATE tasks SET status = 'done', updated_at = unixepoch() WHERE id = ?`).run(taskId)
+  context.deleteWorkspace(taskId)
+  broadcast({ type: 'task_update', task: getTask(taskId) })
+}
+
+function cancelTask(taskId) {
+  db.prepare(`UPDATE tasks SET status = 'failed', updated_at = unixepoch() WHERE id = ?`).run(taskId)
+  context.deleteWorkspace(taskId)
+  log(taskId, 'orchestrator', 'failed', 'Cancelled by user')
+  broadcast({ type: 'task_update', task: getTask(taskId) })
+}
+
+function retryTask(taskId) {
+  db.prepare(`UPDATE tasks SET status = 'pm_active', retry_count = 0, current_agent = 'pm', updated_at = unixepoch() WHERE id = ?`).run(taskId)
+  log(taskId, 'orchestrator', 'started', 'Retried by user — restarting from PM')
   broadcast({ type: 'task_update', task: getTask(taskId) })
 }
 
@@ -223,4 +237,4 @@ function getTask(taskId) {
   `).get(taskId)
 }
 
-module.exports = { startLoop, setBroadcast, createTask, startTask, answerPMQuestions, acceptTask }
+module.exports = { startLoop, setBroadcast, createTask, startTask, answerPMQuestions, acceptTask, cancelTask, retryTask }

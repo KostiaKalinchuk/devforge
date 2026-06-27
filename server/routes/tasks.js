@@ -36,6 +36,22 @@ router.post('/:id/accept', async (req, res) => {
   res.json({ ok: true })
 })
 
+// Cancel task (any active status → failed)
+router.post('/:id/cancel', (req, res) => {
+  const task = db.prepare('SELECT status FROM tasks WHERE id = ?').get(req.params.id)
+  if (!task || ['done', 'failed'].includes(task.status)) return res.status(400).json({ error: 'task cannot be cancelled' })
+  orchestrator.cancelTask(req.params.id)
+  res.json({ ok: true })
+})
+
+// Retry failed task (failed → pm_active)
+router.post('/:id/retry', (req, res) => {
+  const task = db.prepare('SELECT status FROM tasks WHERE id = ?').get(req.params.id)
+  if (!task || task.status !== 'failed') return res.status(400).json({ error: 'task must be in failed status' })
+  orchestrator.retryTask(req.params.id)
+  res.json({ ok: true })
+})
+
 // Get PM questions for a task
 router.get('/:id/questions', (req, res) => {
   const questions = db.prepare(
