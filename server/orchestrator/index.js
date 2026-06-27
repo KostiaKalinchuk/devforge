@@ -25,6 +25,8 @@ function setBroadcast(fn) { broadcast = fn }
 
 const runner = createAdapter()
 
+const inFlight = new Set() // task IDs currently being processed
+
 // ─── Main polling loop ────────────────────────────────────────────────────────
 
 function startLoop(intervalMs = 5000) {
@@ -44,12 +46,14 @@ async function tick() {
   `).all()
 
   for (const task of activeTasks) {
-    try {
-      await processTask(task)
-    } catch (err) {
-      console.error(`[orchestrator] task ${task.id} error:`, err.message)
-      failTask(task.id, err.message)
-    }
+    if (inFlight.has(task.id)) continue
+    inFlight.add(task.id)
+    processTask(task)
+      .catch(err => {
+        console.error(`[orchestrator] task ${task.id} error:`, err.message)
+        failTask(task.id, err.message)
+      })
+      .finally(() => inFlight.delete(task.id))
   }
 }
 

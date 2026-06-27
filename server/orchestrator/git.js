@@ -1,12 +1,28 @@
 const simpleGit = require('simple-git')
 const fs = require('fs')
 
+// Serialize worktree creation per repo path to avoid index.lock collisions
+// when two tasks on the same project start simultaneously.
+const repoLocks = new Map()
+
+function withRepoLock(repoPath, fn) {
+  const current = repoLocks.get(repoPath) || Promise.resolve()
+  const next = current.then(fn)
+  repoLocks.set(repoPath, next.catch(() => {}))
+  return next
+}
+
 async function createWorktree(repoPath, branchName, worktreePath) {
+  return withRepoLock(repoPath, () => _createWorktree(repoPath, branchName, worktreePath))
+}
+
+async function _createWorktree(repoPath, branchName, worktreePath) {
   if (fs.existsSync(worktreePath)) return  // idempotent — retry runs reuse existing worktree
 
   const git = simpleGit(repoPath)
-  await git.fetch('origin').catch(() => {})       // best-effort; local-only repos won't have origin
+  await git.fetch('origin').catch(() => {})        // best-effort; local-only repos won't have origin
   await git.pull('origin', 'main').catch(() => {}) // best-effort
+  await git.raw(['worktree', 'prune']).catch(() => {}) // clean stale metadata from crashed runs
 
   const branches = await git.branchLocal()
   if (branches.all.includes(branchName)) {
