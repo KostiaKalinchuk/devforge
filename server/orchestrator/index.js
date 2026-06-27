@@ -7,6 +7,9 @@ const { v4: uuid } = require('uuid')
 const gitHelper    = require('./git')
 
 const { exec } = require('child_process')
+const fs = require('fs')
+
+const WORKTREE_STATUSES = new Set(['dev_active', 'qa_active', 'tests_active', 'review_active'])
 
 function macNotify(title, body) {
   // macOS system notification — works even when browser is closed
@@ -61,12 +64,24 @@ async function processTask(task) {
   broadcast({ type: 'task_update', task: getTask(task.id) })
 
   // Build context for agent
-  const wsPath  = context.taskDir(task.id)
-  const envData = {}
+  const wsPath       = context.taskDir(task.id)
+  const worktreePath = context.worktreeDir(task.id)
+  const envData      = {}
 
-  // For QA: spin up environment first
+  // For Developer (first run): create isolated worktree from main BEFORE computing projectPath
+  if (task.status === 'dev_active' && task.retry_count === 0) {
+    await gitHelper.createWorktree(task.local_path, task.branch, worktreePath)
+    log(task.id, 'orchestrator', 'started', `Created worktree for branch ${task.branch}`)
+  }
+
+  // projectPath: use worktree for dev/qa/tests/review (worktree must exist by now for these statuses)
+  const projectPath = (WORKTREE_STATUSES.has(task.status) && fs.existsSync(worktreePath))
+    ? worktreePath
+    : task.local_path
+
+  // For QA: spin up environment first (rsync source is worktree — has developer's changes)
   if (sm.needsEnvironment(task.status)) {
-    const project = { local_path: task.local_path, health_check: task.health_check, name: task.project_name }
+    const project = { local_path: task.local_path, health_check: task.health_check, name: task.project_name, worktreePath }
     const env     = await envManager.start(task, project)
     envData.serviceUrl = env.serviceUrl
     envData.evidenceDir = context.evidenceDir(task.id)
@@ -75,16 +90,10 @@ async function processTask(task) {
       .run(env.port, env.prefix, task.id)
   }
 
-  // For Developer (first run): create feature branch from main
-  if (task.status === 'dev_active' && task.retry_count === 0) {
-    await gitHelper.checkoutBranchFromMain(task.local_path, task.branch)
-    log(task.id, 'orchestrator', 'started', `Checked out branch ${task.branch} from main`)
-  }
-
   // Run agent via Claude Code CLI
   const result = await runner.run(agentName, {
     taskId:        task.id,
-    projectPath:   task.local_path,
+    projectPath,
     workspacePath: wsPath,
     serviceUrl:    envData.serviceUrl,
     env: {
@@ -164,6 +173,9 @@ async function acceptTask(taskId) {
     await gitHelper.pushBranch(task.local_path, task.branch).catch(err => {
       console.warn(`[git] push failed for task ${taskId}:`, err.message)
     })
+    await gitHelper.removeWorktree(task.local_path, context.worktreeDir(taskId)).catch(err => {
+      console.warn(`[git] worktree removal failed for task ${taskId}:`, err.message)
+    })
   }
   db.prepare(`UPDATE tasks SET status = 'done', updated_at = unixepoch() WHERE id = ?`).run(taskId)
   broadcast({ type: 'task_update', task: getTask(taskId) })
@@ -185,6 +197,10 @@ function parsePMQuestions(taskId) {
 }
 
 function failTask(taskId, message) {
+  const task = getTask(taskId)
+  if (task?.local_path) {
+    gitHelper.removeWorktree(task.local_path, context.worktreeDir(taskId)).catch(() => {})
+  }
   log(taskId, 'orchestrator', 'failed', message)
   db.prepare(`UPDATE tasks SET status = 'failed', updated_at = unixepoch() WHERE id = ?`).run(taskId)
   broadcast({ type: 'task_update', task: getTask(taskId) })
