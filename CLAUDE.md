@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Setup
+
+**Prerequisites:** Node.js, Docker, and the [Claude Code CLI](https://claude.ai/code) with an active subscription.
+
+```bash
+npm install
+./scripts/setup-dev.sh   # installs Claude Code plugins (one-time)
+```
+
+The setup script installs: `superpowers` (SDD workflow, planning, code review), `code-review` (ultrareview), `playwright` (browser automation), `context7` (live library docs), `security-guidance`.
+
+Copy `.env.example` to `.env` if it exists, or set environment variables directly (see table below).
+
 ## Commands
 
 ```bash
@@ -51,7 +64,8 @@ inbox → pm_active → [pm_questioning ↔ pm_active] → architect_active
 | `server/db.js` | SQLite via sql.js, file-persisted to `devforge.db` |
 | `server/orchestrator/index.js` | Main polling loop, agent dispatch, human action handlers |
 | `server/orchestrator/state-machine.js` | State transition logic and retry limits |
-| `server/orchestrator/context.js` | Workspace file helpers (`workspace/{taskId}/`) |
+| `server/orchestrator/context.js` | Workspace file helpers (`workspace/{taskId}/`, `worktreeDir`) |
+| `server/orchestrator/git.js` | Git worktree helpers: `createWorktree`, `pushBranch`, `removeWorktree` |
 | `server/agents/*.md` | System prompts for each agent role |
 | `server/runner/adapters/claude-code.js` | Spawns `claude` CLI, parses STATUS from stdout |
 | `server/environment/manager.js` | Docker environment lifecycle for QA (rsync + compose) |
