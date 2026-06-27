@@ -15,10 +15,13 @@ async function start(task, project) {
   const port    = portAllocator.allocate(task.id)
   const taskDir = path.join(process.env.WORKSPACE_DIR || './workspace', task.id, 'project')
 
-  // Copy project source into task workspace
+  // Copy project source into task workspace — prefer worktree (has developer's changes)
   fs.mkdirSync(taskDir, { recursive: true })
+  const rsyncSource = (project.worktreePath && fs.existsSync(project.worktreePath))
+    ? project.worktreePath
+    : project.local_path
   const rsync = spawnSync('rsync', ['-a', '--exclude=.git', '--exclude=vendor', '--exclude=node_modules',
-    `${project.local_path}/`, `${taskDir}/`], { stdio: 'pipe' })
+    `${rsyncSource}/`, `${taskDir}/`], { stdio: 'pipe' })
   if (rsync.status !== 0) {
     throw new Error(`rsync failed (exit ${rsync.status}): ${rsync.stderr?.toString()}`)
   }
