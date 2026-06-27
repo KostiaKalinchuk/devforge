@@ -48,8 +48,11 @@ function listEvidenceFiles(taskId) {
 
 function deleteWorkspace(taskId) {
   const dir = taskDir(taskId)
-  if (fs.existsSync(dir)) {
-    fs.rmSync(dir, { recursive: true, force: true })
+  if (!fs.existsSync(dir)) return
+  // Delete all contents except qa-evidence (screenshots/videos not in git)
+  for (const entry of fs.readdirSync(dir)) {
+    if (entry === 'qa-evidence') continue
+    fs.rmSync(path.join(dir, entry), { recursive: true, force: true })
   }
 }
 

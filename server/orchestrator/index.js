@@ -125,7 +125,7 @@ async function processTask(task) {
   const newStatus = sm.nextStatus(task.status, result, newRetry)
 
   db.prepare(`UPDATE tasks SET status = ?, current_agent = ?, retry_count = ?, updated_at = unixepoch()
-              WHERE id = ?`).run(newStatus, sm.agentForStatus(newStatus) || null, newRetry, task.id)
+              WHERE id = ? AND status NOT IN ('failed', 'done', 'awaiting_acceptance')`).run(newStatus, sm.agentForStatus(newStatus) || null, newRetry, task.id)
 
   // macOS notification on key transitions
   if (newStatus === 'awaiting_acceptance') {
@@ -193,7 +193,9 @@ function cancelTask(taskId) {
     gitHelper.removeWorktree(task.local_path, context.worktreeDir(taskId)).catch(() => {})
   }
   db.prepare(`UPDATE tasks SET status = 'failed', updated_at = unixepoch() WHERE id = ?`).run(taskId)
-  context.deleteWorkspace(taskId)
+  if (!inFlight.has(taskId)) {
+    context.deleteWorkspace(taskId)
+  }
   log(taskId, 'orchestrator', 'failed', 'Cancelled by user')
   broadcast({ type: 'task_update', task: getTask(taskId) })
 }
