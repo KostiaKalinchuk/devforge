@@ -243,6 +243,7 @@ async function acceptTask() {
 }
 
 async function cancelTask() {
+  if (!confirm('Cancel this task?')) return
   const id = document.getElementById('task-modal').dataset.taskId
   await api('POST', `/tasks/${id}/cancel`)
   closeModal('task-modal')

@@ -187,6 +187,10 @@ async function acceptTask(taskId) {
 }
 
 function cancelTask(taskId) {
+  const task = getTask(taskId)
+  if (task?.local_path) {
+    gitHelper.removeWorktree(task.local_path, context.worktreeDir(taskId)).catch(() => {})
+  }
   db.prepare(`UPDATE tasks SET status = 'failed', updated_at = unixepoch() WHERE id = ?`).run(taskId)
   context.deleteWorkspace(taskId)
   log(taskId, 'orchestrator', 'failed', 'Cancelled by user')
@@ -194,6 +198,9 @@ function cancelTask(taskId) {
 }
 
 function retryTask(taskId) {
+  const task = getTask(taskId)
+  context.deleteWorkspace(taskId)
+  if (task) context.init(taskId, task.title, task.description)
   db.prepare(`UPDATE tasks SET status = 'pm_active', retry_count = 0, current_agent = 'pm', updated_at = unixepoch() WHERE id = ?`).run(taskId)
   log(taskId, 'orchestrator', 'started', 'Retried by user — restarting from PM')
   broadcast({ type: 'task_update', task: getTask(taskId) })
