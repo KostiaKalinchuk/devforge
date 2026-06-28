@@ -216,6 +216,18 @@ async function loadPMQuestions(taskId) {
       <textarea placeholder="Your answer…">${esc(q.answer||'')}</textarea>
     </div>
   `).join('') + '</div>'
+
+  // Restore drafts from localStorage and auto-save on input
+  el.querySelectorAll('.q-item').forEach(item => {
+    const qId = item.dataset.id
+    const key = `pmDraft_${taskId}_${qId}`
+    const ta = item.querySelector('textarea')
+    if (!ta.value) {
+      const saved = localStorage.getItem(key)
+      if (saved) ta.value = saved
+    }
+    ta.addEventListener('input', () => localStorage.setItem(key, ta.value))
+  })
 }
 
 /* ── Tab switching ──────────────────────────────────────────────────────────── */
@@ -263,6 +275,8 @@ async function submitAnswers() {
     answer: el.querySelector('textarea').value
   }))
   await api('POST', `/tasks/${id}/questions/answers`, { answers })
+  // Clear saved drafts
+  items.forEach(el => localStorage.removeItem(`pmDraft_${id}_${el.dataset.id}`))
   closeModal('task-modal')
 }
 
