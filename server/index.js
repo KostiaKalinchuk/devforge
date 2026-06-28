@@ -29,6 +29,7 @@ async function main() {
 
   app.use('/api/projects', require('./routes/projects'))
   app.use('/api/tasks',    require('./routes/tasks'))
+  app.use('/api/stats',    require('./routes/stats'))
   app.get('/health', (_req, res) => res.json({ ok: true }))
 
   function broadcast(data) {
