@@ -113,7 +113,12 @@ async function processTask(task) {
     await envManager.stop(task).catch(e => console.warn('[env] stop error:', e.message))
   }
 
-  log(task.id, agentName, result.status, result.message?.slice(0, 500))
+  log(task.id, agentName, result.status, result.message?.slice(0, 500), {
+    tokensIn:   result.tokensIn,
+    tokensOut:  result.tokensOut,
+    costUsd:    result.costUsd,
+    durationMs: result.durationMs
+  })
 
   // If PM returns 'questions', parse them from workspace file
   if (task.status === 'pm_active' && result.status === 'questions') {
@@ -234,9 +239,15 @@ function failTask(taskId, message) {
   broadcast({ type: 'task_update', task: getTask(taskId) })
 }
 
-function log(taskId, agent, status, message) {
-  db.prepare('INSERT INTO agent_logs (id, task_id, agent, status, message) VALUES (?, ?, ?, ?, ?)')
-    .run(uuid(), taskId, agent, status, message || '')
+function log(taskId, agent, status, message, stats = {}) {
+  db.prepare(`INSERT INTO agent_logs
+    (id, task_id, agent, status, message, tokens_in, tokens_out, cost_usd, duration_ms)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(uuid(), taskId, agent, status, message || '',
+      stats.tokensIn   ?? null,
+      stats.tokensOut  ?? null,
+      stats.costUsd    ?? null,
+      stats.durationMs ?? null)
   // Keep only the most recent MAX_LOGS_PER_TASK entries per task
   db.prepare(`
     DELETE FROM agent_logs
