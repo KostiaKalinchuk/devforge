@@ -73,9 +73,9 @@ function _save() {
 }
 
 function _migrate() {
-  const cols = _db.prepare('PRAGMA table_info(agent_logs)').all
-    ? (() => { const r = [], s = _db.prepare('PRAGMA table_info(agent_logs)'); while(s.step()) r.push(s.getAsObject()); s.free(); return r })()
-    : []
+  const cols = [], s = _db.prepare('PRAGMA table_info(agent_logs)')
+  while (s.step()) cols.push(s.getAsObject())
+  s.free()
   const names = cols.map(c => c.name)
   if (!names.includes('tokens_in'))   _db.run('ALTER TABLE agent_logs ADD COLUMN tokens_in   INTEGER')
   if (!names.includes('tokens_out'))  _db.run('ALTER TABLE agent_logs ADD COLUMN tokens_out  INTEGER')
