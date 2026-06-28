@@ -373,7 +373,7 @@ function fmtK(v) { if (!v) return '—'; return v >= 1000 ? `${(v/1000).toFixed(
 function fmtMs(v) { if (!v) return '—'; return v >= 60000 ? `${(v/60000).toFixed(1)}m` : `${(v/1000).toFixed(1)}s` }
 function fmtCtx(pct) {
   if (pct == null) return '—'
-  const cls = pct < 50 ? 'ctx-green' : pct < 80 ? 'ctx-yellow' : 'ctx-red'
+  const cls = pct < 50 ? 'ctx-green' : pct <= 80 ? 'ctx-yellow' : 'ctx-red'
   return `${pct.toFixed(1)}% <span class="ctx-bar ${cls}" style="width:${Math.min(pct,100)*0.6}px"></span>`
 }
 
@@ -382,6 +382,7 @@ async function loadStats() {
 
   // Totals bar
   document.getElementById('stats-totals').innerHTML = `
+    <div class="stats-section-title">ЗАГАЛЬНИЙ ПІДСУМОК</div>
     <div class="stats-total-item"><div class="stats-total-label">Total Cost</div><div class="stats-total-value">${fmt$(data.totals.cost_usd)}</div></div>
     <div class="stats-total-item"><div class="stats-total-label">Tokens In</div><div class="stats-total-value">${fmtK(data.totals.tokens_in)}</div></div>
     <div class="stats-total-item"><div class="stats-total-label">Tokens Out</div><div class="stats-total-value">${fmtK(data.totals.tokens_out)}</div></div>
@@ -390,7 +391,7 @@ async function loadStats() {
 
   // By-agent table
   document.getElementById('stats-by-agent').innerHTML = `
-    <div class="stats-section-title">By Agent Type</div>
+    <div class="stats-section-title">НАЙДОРОЖЧІ АГЕНТИ</div>
     <table class="stats-table">
       <tr><th>Agent</th><th>Runs</th><th>Tokens In</th><th>Tokens Out</th><th>Cost</th></tr>
       ${data.by_agent.map(a => `
@@ -432,7 +433,7 @@ async function loadStats() {
   }).join('')
 
   document.getElementById('stats-by-task').innerHTML = `
-    <div class="stats-section-title">By Task</div>
+    <div class="stats-section-title">ПО ЗАДАЧАХ</div>
     <table class="stats-table">
       <tr><th>Task</th><th>Runs</th><th>Tokens In</th><th>Tokens Out</th><th>Cost</th><th>Duration</th><th>Context %</th></tr>
       ${taskRows || '<tr><td colspan="7" style="color:var(--text2);text-align:center;padding:20px">No agent runs yet</td></tr>'}
