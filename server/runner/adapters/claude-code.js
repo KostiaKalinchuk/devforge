@@ -35,7 +35,7 @@ class ClaudeCodeAdapter extends AgentRunner {
       ...this.claudeFlags,
       '--model', model,
       '-p', prompt,
-      '--output-format', 'text'
+      '--output-format', 'json'
     ]
 
     return new Promise((resolve, reject) => {
@@ -60,12 +60,29 @@ class ClaudeCodeAdapter extends AgentRunner {
           return
         }
 
-        // Parse status from last line: "STATUS: done|questions|failed"
-        const statusMatch = stdout.match(/^STATUS:\s*(done|questions|failed)/m)
-        const status = statusMatch ? statusMatch[1] : 'done'
-        const message = stdout.replace(/^STATUS:.*$/m, '').trim()
+        let parsed = {}
+        try { parsed = JSON.parse(stdout) } catch (_) {}
 
-        resolve({ status, message, raw: stdout })
+        // text content — fall back to raw stdout if JSON parse failed
+        const text = parsed.result || stdout
+
+        // cost — try both common field names (CLI uses total_cost_usd)
+        const costUsd = parsed.total_cost_usd ?? parsed.cost_usd ?? null
+
+        // duration
+        const durationMs = parsed.duration_ms ?? null
+
+        // tokens — try flat fields first, then nested usage object
+        const usage = parsed.usage || {}
+        const tokensIn  = parsed.input_tokens  ?? parsed.tokens_in  ?? usage.input_tokens  ?? null
+        const tokensOut = parsed.output_tokens ?? parsed.tokens_out ?? usage.output_tokens ?? null
+
+        // parse STATUS from the text content
+        const statusMatch = text.match(/^STATUS:\s*(done|questions|failed)/m)
+        const status  = statusMatch ? statusMatch[1] : 'done'
+        const message = text.replace(/^STATUS:.*$/m, '').trim()
+
+        resolve({ status, message, raw: stdout, tokensIn, tokensOut, costUsd, durationMs })
       })
     })
   }
