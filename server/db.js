@@ -63,12 +63,25 @@ async function init() {
     _db = new SQL.Database()
   }
   _db.run(SCHEMA)
+  _migrate()
   _save()
   return _db
 }
 
 function _save() {
   if (_db) fs.writeFileSync(DB_PATH, Buffer.from(_db.export()))
+}
+
+function _migrate() {
+  const cols = _db.prepare('PRAGMA table_info(agent_logs)').all
+    ? (() => { const r = [], s = _db.prepare('PRAGMA table_info(agent_logs)'); while(s.step()) r.push(s.getAsObject()); s.free(); return r })()
+    : []
+  const names = cols.map(c => c.name)
+  if (!names.includes('tokens_in'))   _db.run('ALTER TABLE agent_logs ADD COLUMN tokens_in   INTEGER')
+  if (!names.includes('tokens_out'))  _db.run('ALTER TABLE agent_logs ADD COLUMN tokens_out  INTEGER')
+  if (!names.includes('cost_usd'))    _db.run('ALTER TABLE agent_logs ADD COLUMN cost_usd    REAL')
+  if (!names.includes('duration_ms')) _db.run('ALTER TABLE agent_logs ADD COLUMN duration_ms INTEGER')
+  _save()
 }
 
 const db = {
