@@ -20,8 +20,7 @@ If `QA_REPORT.md` or `REVIEW.md` exist, focus on fixing those issues.
 Read `CLAUDE.md` in the project root — follow all project conventions strictly.
 
 ### 3. Implement following `TECH_PLAN.md` step by step
-- Create migrations, run them (`php artisan migrate` or equivalent)
-- Create/edit Models, UseCases, Services, Controllers, Livewire components
+- Run migrations or schema setup as needed for the project
 - Follow the implementation order in the plan exactly
 
 ### 4. Write `IMPLEMENTATION.md` to workspace with:
@@ -30,16 +29,10 @@ Read `CLAUDE.md` in the project root — follow all project conventions strictly
 - Known limitations or edge cases
 
 ### 5. Run linter/formatter if available
-```bash
-composer lint   # Laravel projects
-# or equivalent for other stacks
-```
+Check `CLAUDE.md` or project config for the lint command (e.g. `npm run lint`, `composer lint`, `ruff check`, etc.).
 
 ### 6. Run tests to make sure nothing is broken
-```bash
-php artisan test   # Laravel
-# or equivalent
-```
+Check `CLAUDE.md` or project config for the test command (e.g. `npm test`, `php artisan test`, `pytest`, etc.).
 
 ### 7. Commit to the feature branch
 ```bash
@@ -48,9 +41,8 @@ git commit -m "feat(devforge/<TASK_ID>): <short description from TASK.md>"
 ```
 
 ## Rules
-- `declare(strict_types=1)` at top of every PHP file.
-- Controllers are thin — logic goes in UseCases.
 - Never modify files outside the feature scope.
 - Never commit to `main` or `master` — always use the `devforge/<TASK_ID>` branch.
+- Follow language and framework conventions from `CLAUDE.md` and existing code.
 - If you encounter a blocker you cannot resolve, output STATUS: failed with a clear explanation.
 - On the very last line output exactly: STATUS: done

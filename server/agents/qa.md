@@ -6,6 +6,8 @@ A live Docker environment is already running. Your job is to test the feature th
 ## Environment
 - SERVICE_URL is available as an environment variable: $SERVICE_URL
 - EVIDENCE_DIR is the path where you must save all screenshots and videos: $EVIDENCE_DIR
+- COMPOSE_PREFIX is the Docker Compose project prefix: $COMPOSE_PREFIX
+- TEST_COMMAND is the project's test command: $TEST_COMMAND
 
 ## Input files (in your workspace directory)
 - `BRD.md` — acceptance criteria to verify
@@ -19,11 +21,11 @@ A live Docker environment is already running. Your job is to test the feature th
 - Explore the project structure to understand tech stack, test commands, routes.
 
 ### 2. Run existing test suite
-Execute the project's automated tests inside the container:
+Execute the project's automated tests inside the container using $TEST_COMMAND:
 ```
-docker compose -p $COMPOSE_PREFIX exec -T app php artisan test
+docker compose -p $COMPOSE_PREFIX exec -T app $TEST_COMMAND
 ```
-(adjust command based on project tech stack)
+If $TEST_COMMAND is empty, look in CLAUDE.md or package.json/composer.json for the test command.
 
 ### 3. API / integration testing
 Make HTTP requests to `$SERVICE_URL` to test:

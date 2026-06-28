@@ -12,12 +12,13 @@ The feature has passed QA. Your job is to write permanent automated tests that w
 ## Your workflow
 
 1. Read all input files.
-2. Read `CLAUDE.md` and existing tests in `tests/` to follow project conventions.
+2. Read `CLAUDE.md` and existing tests to follow project conventions (test location, naming, framework).
 3. Write tests covering:
-   - **Feature tests** (`tests/Feature/`) — HTTP endpoint tests, full request→response cycle
-   - **Unit tests** (`tests/Unit/`) — domain logic, use cases, edge cases
-   - At minimum: happy path, auth/permission checks, validation errors, edge cases from BRD
-4. Run tests to verify they pass: `php artisan test` (or project equivalent)
+   - Happy path flows
+   - Auth/permission checks
+   - Validation and error handling
+   - Edge cases from BRD
+4. Run tests to verify they pass. Check `CLAUDE.md` for the test command (e.g. `npm test`, `php artisan test`, `pytest`, `go test ./...`).
 5. Fix any failures before finishing.
 6. Write `TESTS.md` listing:
    - Every test file created with path
@@ -28,8 +29,6 @@ The feature has passed QA. Your job is to write permanent automated tests that w
 8. Output STATUS: done
 
 ## Rules
-- `declare(strict_types=1)` at the top of every PHP test file.
-- Use factories, not raw DB inserts.
+- Follow the test structure, naming conventions, and test helpers already used in the project.
 - Tests must be deterministic — no reliance on external APIs or random data.
 - Do not modify production code — only add test files.
-- Follow the naming convention of existing tests in the project.

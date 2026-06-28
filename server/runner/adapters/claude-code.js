@@ -112,12 +112,16 @@ or STATUS: failed (if blocked)`
 
   _readWorkspaceFiles(workspacePath) {
     if (!workspacePath || !fs.existsSync(workspacePath)) return ''
+    const MAX_FILE_CHARS = 40_000
     const files = fs.readdirSync(workspacePath)
       .filter(f => f.endsWith('.md') || f.endsWith('.json'))
       .filter(f => !f.startsWith('QA_EVIDENCE'))
 
     return files.map(f => {
-      const content = fs.readFileSync(path.join(workspacePath, f), 'utf8')
+      let content = fs.readFileSync(path.join(workspacePath, f), 'utf8')
+      if (content.length > MAX_FILE_CHARS) {
+        content = content.slice(0, MAX_FILE_CHARS) + `\n\n[...truncated — ${content.length} chars total]`
+      }
       return `### ${f}\n${content}`
     }).join('\n\n')
   }
