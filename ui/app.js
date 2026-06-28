@@ -357,11 +357,108 @@ function timeAgo(unixSec) {
 
 document.getElementById('project-select').addEventListener('change', async e => {
   activeProjectId = e.target.value || null
+  showKanban()
   await loadTasks()
   renderKanban()
 })
 
 init()
+
+/* ── Stats ───────────────────────────────────────────────────────────────── */
+function fmt$(v) {
+  if (v == null || v === 0) return '—'
+  return v < 0.01 ? `$${v.toFixed(4)}` : `$${v.toFixed(2)}`
+}
+function fmtK(v) { if (!v) return '—'; return v >= 1000 ? `${(v/1000).toFixed(1)}k` : String(v) }
+function fmtMs(v) { if (!v) return '—'; return v >= 60000 ? `${(v/60000).toFixed(1)}m` : `${(v/1000).toFixed(1)}s` }
+function fmtCtx(pct) {
+  if (pct == null) return '—'
+  const cls = pct < 50 ? 'ctx-green' : pct < 80 ? 'ctx-yellow' : 'ctx-red'
+  return `${pct.toFixed(1)}% <span class="ctx-bar ${cls}" style="width:${Math.min(pct,100)*0.6}px"></span>`
+}
+
+async function loadStats() {
+  const data = await api('GET', '/stats')
+
+  // Totals bar
+  document.getElementById('stats-totals').innerHTML = `
+    <div class="stats-total-item"><div class="stats-total-label">Total Cost</div><div class="stats-total-value">${fmt$(data.totals.cost_usd)}</div></div>
+    <div class="stats-total-item"><div class="stats-total-label">Tokens In</div><div class="stats-total-value">${fmtK(data.totals.tokens_in)}</div></div>
+    <div class="stats-total-item"><div class="stats-total-label">Tokens Out</div><div class="stats-total-value">${fmtK(data.totals.tokens_out)}</div></div>
+    <div class="stats-total-item"><div class="stats-total-label">Agent Runs</div><div class="stats-total-value">${data.totals.runs}</div></div>
+  `
+
+  // By-agent table
+  document.getElementById('stats-by-agent').innerHTML = `
+    <div class="stats-section-title">By Agent Type</div>
+    <table class="stats-table">
+      <tr><th>Agent</th><th>Runs</th><th>Tokens In</th><th>Tokens Out</th><th>Cost</th></tr>
+      ${data.by_agent.map(a => `
+        <tr>
+          <td>${esc(a.agent)}</td>
+          <td>${a.runs}</td>
+          <td>${fmtK(a.tokens_in)}</td>
+          <td>${fmtK(a.tokens_out)}</td>
+          <td>${fmt$(a.cost_usd)}</td>
+        </tr>
+      `).join('')}
+    </table>
+  `
+
+  // By-task collapsible table
+  const taskRows = data.by_task.map((task, i) => {
+    const agentRows = task.agents.map(a => `
+      <tr class="agent-row hidden" data-task-idx="${i}">
+        <td style="padding-left:28px">↳ ${esc(a.agent)}</td>
+        <td></td>
+        <td>${fmtK(a.tokens_in)}</td>
+        <td>${fmtK(a.tokens_out)}</td>
+        <td>${fmt$(a.cost_usd)}</td>
+        <td>${fmtMs(a.duration_ms)}</td>
+        <td>${fmtCtx(a.context_pct)}</td>
+      </tr>
+    `).join('')
+    return `
+      <tr class="task-row" onclick="toggleTaskAgents(${i})">
+        <td>▶ ${esc(task.title)}</td>
+        <td>${task.runs}</td>
+        <td>${fmtK(task.tokens_in)}</td>
+        <td>${fmtK(task.tokens_out)}</td>
+        <td>${fmt$(task.cost_usd)}</td>
+        <td></td><td></td>
+      </tr>
+      ${agentRows}
+    `
+  }).join('')
+
+  document.getElementById('stats-by-task').innerHTML = `
+    <div class="stats-section-title">By Task</div>
+    <table class="stats-table">
+      <tr><th>Task</th><th>Runs</th><th>Tokens In</th><th>Tokens Out</th><th>Cost</th><th>Duration</th><th>Context %</th></tr>
+      ${taskRows || '<tr><td colspan="7" style="color:var(--text2);text-align:center;padding:20px">No agent runs yet</td></tr>'}
+    </table>
+  `
+}
+
+function toggleTaskAgents(idx) {
+  document.querySelectorAll(`.agent-row[data-task-idx="${idx}"]`).forEach(row => {
+    row.classList.toggle('hidden')
+  })
+}
+
+function showStats() {
+  document.getElementById('kanban').style.display = 'none'
+  document.getElementById('stats-view').style.display = 'flex'
+  document.getElementById('stats-view').style.flexDirection = 'column'
+  document.getElementById('btn-stats').classList.add('active')
+  loadStats()
+}
+
+function showKanban() {
+  document.getElementById('kanban').style.display = 'flex'
+  document.getElementById('stats-view').style.display = 'none'
+  document.getElementById('btn-stats').classList.remove('active')
+}
 
 /* ── Notifications ──────────────────────────────────────────────────────────── */
 

@@ -144,3 +144,28 @@ body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--t
 .project-card .path { font-size: 10px; color: var(--accent2); font-family: monospace; }
 
 .empty { color: var(--text2); font-size: 12px; text-align: center; padding: 20px; }
+
+/* ── Stats ── */
+#btn-stats { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); padding: 6px 12px; border-radius: var(--radius); font-size: 13px; cursor: pointer; }
+#btn-stats.active { border-color: var(--accent); color: var(--accent2); }
+
+.stats-totals { display: flex; gap: 24px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 24px; }
+.stats-total-item { display: flex; flex-direction: column; gap: 4px; }
+.stats-total-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); }
+.stats-total-value { font-size: 22px; font-weight: 700; color: var(--text); }
+
+.stats-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 10px; }
+
+.stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.stats-table th { text-align: left; padding: 6px 10px; color: var(--text2); font-size: 10px; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); }
+.stats-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+.stats-table tr:last-child td { border-bottom: none; }
+.stats-table tr.task-row { cursor: pointer; }
+.stats-table tr.task-row:hover td { background: var(--bg3); }
+.stats-table tr.agent-row td { background: var(--bg); color: var(--text2); font-size: 11px; padding-left: 28px; }
+.stats-table tr.agent-row.hidden { display: none; }
+
+.ctx-bar { display: inline-block; height: 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle; }
+.ctx-green  { background: var(--green); }
+.ctx-yellow { background: var(--yellow); }
+.ctx-red    { background: var(--red); }

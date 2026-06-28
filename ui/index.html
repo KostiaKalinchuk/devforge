@@ -14,11 +14,19 @@
   <select id="project-select"></select>
   <div id="ws-dot" title="WebSocket connection"></div>
   <button id="btn-projects" onclick="toggleProjects()">⚙ Projects</button>
+  <button id="btn-stats" onclick="showStats()">📊 Stats</button>
   <button id="btn-new-task" onclick="openNewTask()">+ New Task</button>
 </div>
 
 <!-- Kanban board -->
 <div id="kanban"></div>
+
+<!-- ── Stats view ── -->
+<div id="stats-view" style="display:none; padding:20px; overflow-y:auto; flex:1;">
+  <div id="stats-totals" class="stats-totals"></div>
+  <div id="stats-by-agent" style="margin-top:24px"></div>
+  <div id="stats-by-task"  style="margin-top:24px"></div>
+</div>
 
 <!-- ── Task detail modal ── -->
 <div class="modal-bg" id="task-modal" onclick="if(event.target===this)closeModal('task-modal')">
