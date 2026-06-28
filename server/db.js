@@ -81,6 +81,12 @@ function _migrate() {
   if (!names.includes('tokens_out'))  _db.run('ALTER TABLE agent_logs ADD COLUMN tokens_out  INTEGER')
   if (!names.includes('cost_usd'))    _db.run('ALTER TABLE agent_logs ADD COLUMN cost_usd    REAL')
   if (!names.includes('duration_ms')) _db.run('ALTER TABLE agent_logs ADD COLUMN duration_ms INTEGER')
+
+  const taskCols = [], ts = _db.prepare('PRAGMA table_info(tasks)')
+  while (ts.step()) taskCols.push(ts.getAsObject())
+  ts.free()
+  const taskNames = taskCols.map(c => c.name)
+  if (!taskNames.includes('failed_from_status')) _db.run('ALTER TABLE tasks ADD COLUMN failed_from_status TEXT')
   _save()
 }
 

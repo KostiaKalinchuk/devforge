@@ -207,10 +207,18 @@ function cancelTask(taskId) {
 
 function retryTask(taskId) {
   const task = getTask(taskId)
-  context.deleteWorkspace(taskId)
-  if (task) context.init(taskId, task.title, task.description)
-  db.prepare(`UPDATE tasks SET status = 'pm_active', retry_count = 0, current_agent = 'pm', updated_at = unixepoch() WHERE id = ?`).run(taskId)
-  log(taskId, 'orchestrator', 'started', 'Retried by user — restarting from PM')
+  const restartStatus = task?.failed_from_status || 'pm_active'
+
+  if (restartStatus === 'pm_active') {
+    context.deleteWorkspace(taskId)
+    if (task) context.init(taskId, task.title, task.description)
+    db.prepare('DELETE FROM pm_questions WHERE task_id = ?').run(taskId)
+  }
+
+  const agentName = sm.agentForStatus(restartStatus) || 'pm'
+  db.prepare(`UPDATE tasks SET status = ?, current_agent = ?, retry_count = 0, failed_from_status = NULL, updated_at = unixepoch() WHERE id = ?`)
+    .run(restartStatus, agentName, taskId)
+  log(taskId, 'orchestrator', 'started', `Retried by user — resuming from ${restartStatus}`)
   broadcast({ type: 'task_update', task: getTask(taskId) })
 }
 
@@ -235,7 +243,8 @@ function failTask(taskId, message) {
     gitHelper.removeWorktree(task.local_path, context.worktreeDir(taskId)).catch(() => {})
   }
   log(taskId, 'orchestrator', 'failed', message)
-  db.prepare(`UPDATE tasks SET status = 'failed', updated_at = unixepoch() WHERE id = ?`).run(taskId)
+  db.prepare(`UPDATE tasks SET status = 'failed', failed_from_status = ?, updated_at = unixepoch() WHERE id = ?`)
+    .run(task?.status ?? null, taskId)
   broadcast({ type: 'task_update', task: getTask(taskId) })
 }
 
