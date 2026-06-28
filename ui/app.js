@@ -449,9 +449,12 @@ function toggleTaskAgents(idx) {
 
 function showStats() {
   document.getElementById('kanban').style.display = 'none'
-  document.getElementById('stats-view').style.display = 'flex'
-  document.getElementById('stats-view').style.flexDirection = 'column'
+  const sv = document.getElementById('stats-view')
+  sv.style.display = 'flex'
+  sv.style.flexDirection = 'column'
   document.getElementById('btn-stats').classList.add('active')
+  document.getElementById('btn-board').style.display = ''
+  document.getElementById('btn-new-task').style.display = 'none'
   loadStats()
 }
 
@@ -459,6 +462,8 @@ function showKanban() {
   document.getElementById('kanban').style.display = 'flex'
   document.getElementById('stats-view').style.display = 'none'
   document.getElementById('btn-stats').classList.remove('active')
+  document.getElementById('btn-board').style.display = 'none'
+  document.getElementById('btn-new-task').style.display = ''
 }
 
 /* ── Notifications ──────────────────────────────────────────────────────────── */
