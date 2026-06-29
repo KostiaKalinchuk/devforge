@@ -80,7 +80,6 @@ async function init() {
 - [ ] **Step 2: Verify migration runs without error**
 
 ```bash
-cd /Users/kostiantynkalinchuk/localhost/devforge
 node -e "require('./server/db').init().then(() => { const {db} = require('./server/db'); const cols = db.prepare('PRAGMA table_info(agent_logs)').all(); console.log(cols.map(c=>c.name)) })"
 ```
 
