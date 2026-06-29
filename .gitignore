@@ -24,6 +24,9 @@ npm-debug.log*
 # SDD scratch files (review diffs, reports, progress ledger)
 .superpowers/
 
+# AI planning/spec docs (local-only, may contain machine paths)
+docs/superpowers/
+
 # macOS
 .DS_Store
 
